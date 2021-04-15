@@ -290,6 +290,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 					plog.Errorf("Cannot get current offset of topic %s partition %d: %v", topic, partition, err)
 				} else {
 					e.mu.Lock()
+					plog.Infof("topic %s, partition: %d, offset: %d", topic, partition, offset)
 					offset[topic][partition] = currentOffset
 					e.mu.Unlock()
 					ch <- prometheus.MustNewConstMetric(
@@ -399,7 +400,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			return
 		}
 		for _, group := range describeGroups.Groups {
-			plog.Infof("group: %+v", group)
+			plog.Infof("group:[id:%s state:%s, members:%d, protocol:%s, protocolType:%s, error:%s]",
+				group.GroupId, group.State, len(group.Members), group.Protocol, group.ProtocolType, group.Err)
 			offsetFetchRequest := sarama.OffsetFetchRequest{ConsumerGroup: group.GroupId, Version: 1}
 			for topic, partitions := range offset {
 				for partition := range partitions {
@@ -413,6 +415,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 				plog.Errorf("Cannot get offset of group %s: %v", group.GroupId, err)
 			} else {
 				for topic, partitions := range offsetFetchResponse.Blocks {
+					for partition, block := range partitions {
+						plog.Infof("group %s, topic%s, partition:%d, offset:%d, leaderEcho:%d, metadata:%s, error:%s",
+							group.GroupId, topic, partition, block.Offset, block.LeaderEpoch, block.Metadata, block.Err)
+					}
 					// If the topic is not consumed by that consumer group, skip it
 					topicConsumed := false
 					for _, offsetFetchResponseBlock := range partitions {
