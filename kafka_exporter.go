@@ -399,6 +399,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			return
 		}
 		for _, group := range describeGroups.Groups {
+			plog.Infof("group: %+v", group)
 			offsetFetchRequest := sarama.OffsetFetchRequest{ConsumerGroup: group.GroupId, Version: 1}
 			for topic, partitions := range offset {
 				for partition := range partitions {
