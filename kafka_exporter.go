@@ -290,7 +290,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 					plog.Errorf("Cannot get current offset of topic %s partition %d: %v", topic, partition, err)
 				} else {
 					e.mu.Lock()
-					plog.Infof("topic %s, partition: %d, offset: %d", topic, partition, offset)
+					plog.Infof("topic %s, partition: %d, offset: %d", topic, partition, currentOffset)
 					offset[topic][partition] = currentOffset
 					e.mu.Unlock()
 					ch <- prometheus.MustNewConstMetric(
