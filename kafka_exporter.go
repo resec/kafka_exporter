@@ -400,8 +400,13 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			return
 		}
 		for _, group := range describeGroups.Groups {
-			plog.Infof("group:[id:%s state:%s, members:%d, protocol:%s, protocolType:%s, error:%s]",
-				group.GroupId, group.State, len(group.Members), group.Protocol, group.ProtocolType, group.Err)
+			if group.Err != sarama.ErrNoError {
+				plog.Infof("group:[id:%s state:%s, members:%d, protocol:%s, protocolType:%s, error:%s]",
+					group.GroupId, group.State, len(group.Members), group.Protocol, group.ProtocolType, group.Err)
+			} else {
+				plog.Infof("group:[id:%s state:%s, members:%d, protocol:%s, protocolType:%s]",
+					group.GroupId, group.State, len(group.Members), group.Protocol, group.ProtocolType)
+			}
 			offsetFetchRequest := sarama.OffsetFetchRequest{ConsumerGroup: group.GroupId, Version: 1}
 			for topic, partitions := range offset {
 				for partition := range partitions {
@@ -416,8 +421,13 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			} else {
 				for topic, partitions := range offsetFetchResponse.Blocks {
 					for partition, block := range partitions {
-						plog.Infof("group %s, topic:%s, partition:%d, offset:%d, leaderEcho:%d, metadata:%s, error:%s",
-							group.GroupId, topic, partition, block.Offset, block.LeaderEpoch, block.Metadata, block.Err)
+						if block.Err != sarama.ErrNoError {
+							plog.Infof("group %s, topic:%s, partition:%d, offset:%d, leaderEcho:%d, metadata:%s, error:%s",
+								group.GroupId, topic, partition, block.Offset, block.LeaderEpoch, block.Metadata, block.Err)
+						} else {
+							plog.Infof("group %s, topic:%s, partition:%d, offset:%d, leaderEcho:%d, metadata:%s",
+								group.GroupId, topic, partition, block.Offset, block.LeaderEpoch, block.Metadata)
+						}
 					}
 					// If the topic is not consumed by that consumer group, skip it
 					topicConsumed := false
