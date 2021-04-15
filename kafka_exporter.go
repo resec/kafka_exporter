@@ -416,7 +416,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			} else {
 				for topic, partitions := range offsetFetchResponse.Blocks {
 					for partition, block := range partitions {
-						plog.Infof("group %s, topic%s, partition:%d, offset:%d, leaderEcho:%d, metadata:%s, error:%s",
+						plog.Infof("group %s, topic:%s, partition:%d, offset:%d, leaderEcho:%d, metadata:%s, error:%s",
 							group.GroupId, topic, partition, block.Offset, block.LeaderEpoch, block.Metadata, block.Err)
 					}
 					// If the topic is not consumed by that consumer group, skip it
